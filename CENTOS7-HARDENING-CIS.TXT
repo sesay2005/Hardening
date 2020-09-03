@@ -126,7 +126,8 @@ chmod 600 /etc/at.allow /etc/cron.allow
 
 #add below lines in  /etc/audit/rules.d/audit.rules
 
-echo "-a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time-change
+echo "-a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time-change 
+
 
 -a always,exit -F arch=b32 -S adjtimex -S settimeofday -S stime -k time-change
 
@@ -250,7 +251,7 @@ sed -i 's/^# lcredit =.*$/lcredit = -1/' ${pwqual}
 
 # CIS 5.3.2
 content="$(egrep -v "^#|^auth" /etc/pam.d/password-auth)"
-echo -e "auth required pam_env.so
+echo " -e "auth required pam_env.so
 auth required pam_faillock.so preauth audit silent deny=5 unlock_time=900
 auth [success=1 default=bad] pam_unix.so
 auth [default=die] pam_faillock.so authfail audit deny=5 unlock_time=900
@@ -258,13 +259,13 @@ auth sufficient pam_faillock.so authsucc audit deny=5 unlock_time=900
 auth required pam_deny.so\n$content" > /etc/pam.d/password-auth
 
 content="$(egrep -v "^#|^auth" /etc/pam.d/system-auth)"
-echo -e "auth required pam_env.so
+echo " -e "auth required pam_env.so
 auth sufficient pam_unix.so remember=5
 auth required pam_faillock.so preauth audit silent deny=5 unlock_time=900
 auth [success=1 default=bad] pam_unix.so
 auth [default=die] pam_faillock.so authfail audit deny=5 unlock_time=900
 auth sufficient pam_faillock.so authsucc audit deny=5 unlock_time=900
-auth required pam_deny.so\n$content" > /etc/pam.d/system-auth
+auth required pam_deny.so\n$content" >> /etc/pam.d/system-auth
 
 # CIS 5.3.3
 line_num="$(grep -n "^password[[:space:]]*sufficient[[:space:]]*pam_unix.so*" /etc/pam.d/system-auth | cut -d: -f1)"
@@ -281,9 +282,13 @@ if [[ "${root_gid}" -ne 0 ]] ; then
 fi
 
 # CIS 5.4.4
+
 bashrc='/etc/bashrc'
+
 #first umask cmd sets it for users, second umask cmd sets it for system reserved uids
+
 #we want to alter the first one
+
 line_num=$(grep -n "^[[:space:]]*umask" ${bashrc} | head -1 | cut -d: -f1)
 sed -i ${line_num}s/002/027/ ${bashrc}
 
@@ -292,14 +297,17 @@ line_num=$(grep -n "^[[:space:]]*umask" ${bashrc} | head -1 | cut -d: -f1)
 sed -i ${line_num}s/002/027/ ${bashprofile}
 
 # CIS 5.5
+
 cp /etc/securetty /etc/securetty.orig
 #> /etc/securetty
-cat << EOF > /etc/securetty
-console
-tty1
-EOF
+
+#cat << EOF > /etc/securetty
+echo "console 
+tty1"  > /etc/securetty
+
 
 # CIS 5.6
+
 pam_su='/etc/pam.d/su'
 line_num="$(grep -n "^\#auth[[:space:]]*required[[:space:]]*pam_wheel.so[[:space:]]*use_uid" ${pam_su} | cut -d: -f1)"
 sed -i "${line_num} a auth              required        pam_wheel.so use_uid" ${pam_su}
@@ -320,7 +328,9 @@ chown root:root /etc/gshadow
 #Install AID
 yum install
 echo "0 5 * * * /usr/sbin/aide --check" >> /var/spool/cron/root
+
 #Initialise last so it doesn't pick up changes made by the post-install of the KS
+
 /usr/sbin/aide --init -B 'database_out=file:/var/lib/aide/aide.db.gz'
 
 %end
